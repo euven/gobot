@@ -1,0 +1,3 @@
+sleekxmpp
+dnspython
+websocket-client

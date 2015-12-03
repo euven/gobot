@@ -16,5 +16,8 @@ e.g
 python gobot.py -j eugene@some.jabber.domain -p yourpassword -r roomname@conference.somejabber.domain -n mybotnickname -g my.gocd.domain -s my,stage,names
 ````
 
+### Docker
+Checkout the Dockerfile for running this service in a container ;)
+
 ### Credits
 * taglines obtained from http://www.textfiles.com

@@ -10,6 +10,8 @@ import random
 import sleekxmpp
 import websocket
 
+import time
+
 # ensure utf8 encoding
 if sys.version_info < (3, 0):
     reload(sys)
@@ -83,11 +85,11 @@ class GoBot(sleekxmpp.ClientXMPP):
 
 
         def gocd_error(ws, error):
-            print "GOCD ERROR!!!"
-            print error
+            logging.error("GOCD ERROR!!!")
+            logging.error(error)
 
         def gocd_close(ws):
-            print "### gocd ws closed ###"
+            logging.info("### gocd ws closed ###")
 
         websocket.enableTrace(True)
 
@@ -96,7 +98,16 @@ class GoBot(sleekxmpp.ClientXMPP):
                                     on_error = gocd_error,
                                     on_close = gocd_close)
 
-        self.ws.run_forever()
+        sleepsecs = 60
+        while (1):
+            try:
+                self.ws.run_forever()
+                logging.error("Trying websocket reconnect in %s seconds" % sleepsecs)
+                time.sleep(sleepsecs)
+            except:
+                logging.error("Unexpected error:", sys.exc_info()[0])
+                logging.error("Trying websocket reconnect in %s seconds" % sleepsecs)
+                time.sleep(sleepsecs)
 
     def gocd_listen_stop(self, event):
         self.ws.close()
@@ -144,6 +155,5 @@ if __name__ == '__main__':
 
     if xmpp.connect():
         xmpp.process(block=True)
-        print("Finished")
     else:
-        print("Failed to connect...")
+        logging.error("Failed to connect to XMPP...")

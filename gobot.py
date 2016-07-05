@@ -4,7 +4,7 @@ import os
 import sys
 import logging
 import getpass
-from optparse import OptionParser
+import argparse
 import json
 import random
 
@@ -116,43 +116,43 @@ class GoBot(sleekxmpp.ClientXMPP):
 
 if __name__ == '__main__':
     # Setup the command line arguments.
-    optp = OptionParser()
+    argp = argparse.ArgumentParser(description="GoCD bot")
 
-    optp.add_option('-q', '--quiet', help='set logging to ERROR',
-                    action='store_const', dest='loglevel',
-                    const=logging.ERROR, default=logging.INFO)
-    optp.add_option("-j", "--jabberid", dest="jabberid",
-                    help="Jabber ID")
-    optp.add_option("-p", "--password", dest="password",
-                    help="password (insecure, use env variable GOBOT_PASSWORD instead)")
-    optp.add_option("-n", "--nick", dest="nick",
-                    help="Nickname")
-    optp.add_option("-r", "--room", dest="room",
-                    help="Room to join")
-    optp.add_option("-g", "--godomain", dest="godomain",
-                    help="GoCD domain to connect to")
-    optp.add_option("-s", "--stages", dest="stages",
-                    help="comma-seperated list of stage names to report on")
+    argp.add_argument('-q', '--quiet', help='set logging to ERROR',
+                      action='store_const', dest='loglevel',
+                      const=logging.ERROR, default=logging.INFO)
+    argp.add_argument("-j", "--jabberid", dest="jabberid",
+                      help="Jabber ID")
+    argp.add_argument("-p", "--password", dest="password",
+                      help="password (insecure, use env variable GOBOT_PASSWORD instead)")
+    argp.add_argument("-n", "--nick", dest="nick",
+                      help="Nickname")
+    argp.add_argument("-r", "--room", dest="room",
+                      help="Room to join")
+    argp.add_argument("-g", "--godomain", dest="godomain",
+                      help="GoCD domain to connect to")
+    argp.add_argument("-s", "--stages", dest="stages",
+                      help="comma-seperated list of stage names to report on")
 
-    opts, args = optp.parse_args()
+    args = argp.parse_args()
 
     # Setup logging.
-    logging.basicConfig(level=opts.loglevel,
+    logging.basicConfig(level=args.loglevel,
                         format='%(levelname)-8s %(message)s')
 
-    if opts.jabberid is None:
-        opts.jabberid = raw_input("Username: ")
-    if opts.password is None:
+    if args.jabberid is None:
+        args.jabberid = raw_input("Username: ")
+    if args.password is None:
         if os.environ.get('GOBOT_PASSWORD'):
-            opts.password = os.environ.get('GOBOT_PASSWORD')
+            args.password = os.environ.get('GOBOT_PASSWORD')
         else:
-            opts.password = getpass.getpass("Password: ")
-    if opts.nick is None:
-        opts.nick = raw_input("Nickname: ")
-    if opts.room is None:
-        opts.room = raw_input("Room: ")
+            args.password = getpass.getpass("Password: ")
+    if args.nick is None:
+        args.nick = raw_input("Nickname: ")
+    if args.room is None:
+        args.room = raw_input("Room: ")
 
-    xmpp = GoBot(opts.jabberid, opts.password, opts.room, opts.nick, opts.godomain, opts.stages.split(','))
+    xmpp = GoBot(args.jabberid, args.password, args.room, args.nick, args.godomain, args.stages.split(','))
     xmpp.register_plugin('xep_0030')  # Service Discovery
     xmpp.register_plugin('xep_0045')  # Multi-User Chat
     xmpp.register_plugin('xep_0199')  # XMPP Ping

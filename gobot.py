@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import os
 import sys
 import logging
 import getpass
@@ -123,7 +124,7 @@ if __name__ == '__main__':
     optp.add_option("-j", "--jabberid", dest="jabberid",
                     help="Jabber ID")
     optp.add_option("-p", "--password", dest="password",
-                    help="password")
+                    help="password (insecure, use env variable GOBOT_PASSWORD instead)")
     optp.add_option("-n", "--nick", dest="nick",
                     help="Nickname")
     optp.add_option("-r", "--room", dest="room",
@@ -142,7 +143,10 @@ if __name__ == '__main__':
     if opts.jabberid is None:
         opts.jabberid = raw_input("Username: ")
     if opts.password is None:
-        opts.password = getpass.getpass("Password: ")
+        if os.environ.get('GOBOT_PASSWORD'):
+            opts.password = os.environ.get('GOBOT_PASSWORD')
+        else:
+            opts.password = getpass.getpass("Password: ")
     if opts.nick is None:
         opts.nick = raw_input("Nickname: ")
     if opts.room is None:

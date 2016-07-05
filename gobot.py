@@ -15,7 +15,7 @@ import time
 
 # ensure utf8 encoding
 if sys.version_info < (3, 0):
-    reload(sys)
+    reload(sys)  # noqa
     sys.setdefaultencoding('utf8')
 else:
     raw_input = input
@@ -32,20 +32,14 @@ class GoBot(sleekxmpp.ClientXMPP):
         self.stages = stages
 
         self.add_event_handler("session_start", self.start)
-
         self.add_event_handler("groupchat_message", self.bot_message)
-
         self.add_event_handler('gocd_listen', self.gocd_listen, threaded=True)
-
         self.add_event_handler('disconnected', self.gocd_listen_stop)
 
     def start(self, event):
         self.get_roster()
         self.send_presence()
-        self.plugin['xep_0045'].joinMUC(self.room,
-                                        self.nick,
-                                        wait=True)
-
+        self.plugin['xep_0045'].joinMUC(self.room, self.nick, wait=True)
         self.event('gocd_listen')
 
     def bot_message(self, msg):
@@ -57,7 +51,8 @@ class GoBot(sleekxmpp.ClientXMPP):
         tagfile = open('taglines.txt')
         tagline = next(tagfile)
         for num, aline in enumerate(tagfile):
-            if random.randrange(num + 2): continue
+            if random.randrange(num + 2):
+                continue
             tagline = aline
         tagfile.close()
 
@@ -67,23 +62,28 @@ class GoBot(sleekxmpp.ClientXMPP):
 
     def gocd_listen(self, event):
         failedpipes = []
+
         def gocd_message(ws, message):
             msg = json.loads(message)
             pipename = msg['pipeline']['name']
             stage = msg['pipeline']['stage']
             if stage['name'] in self.stages:
-                golink = 'https://%s/go/tab/pipeline/history/%s' % (self.godomain, pipename)
+                golink = 'https://{domain}/go/tab/pipeline/history/{pipe}'.format(
+                    domain=self.godomain, pipe=pipename)
                 if stage['state'] == 'Passed' and pipename in failedpipes:
                     failedpipes.remove(pipename)
-                    self.send_message(mto=self.room,
-                                      mbody="%s (%s) fixed :) - %s" % (pipename, stage['name'], golink),
-                                      mtype='groupchat')
+                    self.send_message(
+                        mto=self.room,
+                        mbody="{pipe} ({stage}) fixed :) - {link}".format(
+                            pipe=pipename, stage=stage['name'], link=golink),
+                        mtype='groupchat')
                 elif stage['state'] == 'Failed' and pipename not in failedpipes:
                     failedpipes.append(pipename)
-                    self.send_message(mto=self.room,
-                                      mbody='%s (%s) broken :( - %s' % (pipename, stage['name'], golink),
-                                      mtype='groupchat')
-
+                    self.send_message(
+                        mto=self.room,
+                        mbody='{pipe} ({stage}) broken :( - {link}'.format(
+                            pipe=pipename, stage=stage['name'], link=golink),
+                        mtype='groupchat')
 
         def gocd_error(ws, error):
             logging.error("GOCD ERROR!!!")
@@ -94,20 +94,20 @@ class GoBot(sleekxmpp.ClientXMPP):
 
         websocket.enableTrace(True)
 
-        self.ws = websocket.WebSocketApp("ws://%s:8887/" % self.godomain,
-                                    on_message = gocd_message,
-                                    on_error = gocd_error,
-                                    on_close = gocd_close)
+        self.ws = websocket.WebSocketApp("ws://{domain}:8887/".format(domain=self.godomain),
+                                         on_message=gocd_message,
+                                         on_error=gocd_error,
+                                         on_close=gocd_close)
 
         sleepsecs = 60
         while (1):
             try:
                 self.ws.run_forever()
-                logging.error("Trying websocket reconnect in %s seconds" % sleepsecs)
+                logging.error("Trying websocket reconnect in {} seconds".format(sleepsecs))
                 time.sleep(sleepsecs)
             except:
                 logging.error("Unexpected error:", sys.exc_info()[0])
-                logging.error("Trying websocket reconnect in %s seconds" % sleepsecs)
+                logging.error("Trying websocket reconnect in {} seconds".format(sleepsecs))
                 time.sleep(sleepsecs)
 
     def gocd_listen_stop(self, event):
@@ -153,9 +153,9 @@ if __name__ == '__main__':
         opts.room = raw_input("Room: ")
 
     xmpp = GoBot(opts.jabberid, opts.password, opts.room, opts.nick, opts.godomain, opts.stages.split(','))
-    xmpp.register_plugin('xep_0030') # Service Discovery
-    xmpp.register_plugin('xep_0045') # Multi-User Chat
-    xmpp.register_plugin('xep_0199') # XMPP Ping
+    xmpp.register_plugin('xep_0030')  # Service Discovery
+    xmpp.register_plugin('xep_0045')  # Multi-User Chat
+    xmpp.register_plugin('xep_0199')  # XMPP Ping
 
     if xmpp.connect():
         xmpp.process(block=True)

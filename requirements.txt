@@ -1,3 +1,5 @@
+pyasn1
+pyasn1-modules
 sleekxmpp
 dnspython
 websocket-client

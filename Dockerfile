@@ -14,8 +14,9 @@ RUN apt-get update && \
 
 RUN useradd -m -s /bin/bash iamgobot
 
-ADD . /gobot
-RUN pip install -r /gobot/requirements.txt
+ADD requirements.txt /tmp/
+RUN pip install -r /tmp/requirements.txt && rm -f /tmp/requirements.txt
+ADD gobot.py start_gobot.sh taglines.txt /gobot/
 
 USER iamgobot
 WORKDIR /gobot
